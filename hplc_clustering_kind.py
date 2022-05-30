@@ -1,0 +1,49 @@
+import pandas as pd
+from scipy.cluster import hierarchy
+from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pyplot as plt
+import seaborn as sns
+
+sns.set_theme(context = 'paper')
+kinds = ['Arom', 'Fru']
+#getting hplc data
+hplc_df = pd.read_csv('./dati_hplc/hplc_data_with_categories.tsv', sep = '\t', header = 0, index_col = 0)
+
+#removing non-molecule columns
+df = hplc_df.drop(['Year', 'Spec'], axis = 1)
+print(df)
+
+for kind in kinds:
+	df_toclust = df[df['Kind'] == kind].drop('Kind', axis = 1).dropna(how = 'all', axis = 1).fillna(0)
+	fitter = MinMaxScaler().fit(df_toclust)
+	df_norm = pd.DataFrame(fitter.transform(df_toclust))
+	df_norm.index = df_toclust.index
+	df_norm.columns = df_toclust.columns
+	#clustering non-normalized data
+	cluster_col = hierarchy.linkage(df_toclust.T, method="ward", metric="euclidean")
+	cluster_row = hierarchy.linkage(df_toclust, method="ward", metric="euclidean")
+	clusterfig = sns.clustermap(df_toclust, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_toclust)/4), cmap = 'magma')
+	index_col = clusterfig.dendrogram_col.reordered_ind #molecule
+	index_row = clusterfig.dendrogram_row.reordered_ind #sample
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full_magma.png', dpi = 300)
+	plt.clf()
+	clusterfig = sns.clustermap(df_toclust, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_toclust)/4), cmap = 'viridis')
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full_viridis.png', dpi = 300)
+	plt.clf()
+	clusterfig = sns.clustermap(df_toclust, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_toclust)/4), cmap = 'mako')
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full_mako.png', dpi = 300)
+	plt.clf()
+
+	cluster_col = hierarchy.linkage(df_norm.T, method="ward", metric="euclidean")
+	cluster_row = hierarchy.linkage(df_norm, method="ward", metric="euclidean")
+	clusterfig = sns.clustermap(df_norm, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_norm)/4), cmap = 'magma')
+	index_col = clusterfig.dendrogram_col.reordered_ind #molecule
+	index_row = clusterfig.dendrogram_row.reordered_ind #sample
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full(norm)_magma.png', dpi = 300)
+	plt.clf()
+	clusterfig = sns.clustermap(df_norm, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_norm)/4), cmap = 'viridis')
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full(norm)_viridis.png', dpi = 300)
+	plt.clf()
+	clusterfig = sns.clustermap(df_norm, row_linkage = cluster_row, col_linkage = cluster_col, yticklabels = True, figsize = (10, len(df_norm)/4), cmap = 'mako')
+	plt.savefig(f'./plots/hplc_clustering/kind/{kind}_hplc_clust_full(norm)_mako.png', dpi = 300)
+	plt.clf()
